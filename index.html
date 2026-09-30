@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - Portal Ujian Informatika</title>
+  <!-- Menghubungkan CSS Lokal Hasil Kompilasi Tailwind v4 CLI -->
+  <link rel="stylesheet" href="output.css">
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex items-center justify-center p-4 selection:bg-blue-500 selection:text-white">
+
+  <div class="bg-slate-800 p-6 rounded-2xl shadow-2xl max-w-lg w-full border border-slate-700 transition-all duration-300">
+    
+    <!-- HEADER -->
+    <div class="text-center mb-6">
+      <span class="inline-block p-3 bg-blue-600/20 text-blue-400 rounded-2xl mb-3 text-2xl border border-blue-500/30">💻</span>
+      <h1 class="text-2xl font-bold text-blue-400">Portal Ujian Web Programming</h1>
+      <p class="text-slate-400 text-xs mt-1">Latihan & Ujian Interaktif Informatika</p>
+    </div>
+    
+    <!-- PESAN ERROR INLINE (Jika nama/kelas belum diisi) -->
+    <div id="error-msg" class="mb-4 p-3 bg-red-950/80 border border-red-500/80 text-red-300 text-xs rounded-xl hidden text-center font-medium">
+      ⚠️ Silakan isi Nama Lengkap dan pilih Jenjang Kelas!
+    </div>
+
+    <!-- FORM INPUT -->
+    <div class="mb-4">
+      <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Nama Lengkap Siswa</label>
+      <input type="text" id="student-name" placeholder="Contoh: Ahmad Raihan" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors">
+    </div>
+
+    <div class="mb-6">
+      <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Pilih Jenjang Kelas</label>
+      <select id="student-grade" class="w-full p-3 rounded-xl bg-slate-900 border border-slate-700 text-white text-sm focus:outline-none focus:border-blue-500 transition-colors cursor-pointer">
+        <option value="">-- Pilih Kelas --</option>
+        <option value="SD 6">SD Kelas 6 (Scratch Dasar)</option>
+        <option value="SMP 1">SMP Kelas 7 (Google Sheets)</option>
+        <option value="SMP 2">SMP Kelas 8 (Scratch Lanjutan)</option>
+        <option value="SMP 3">SMP Kelas 9 (HTML & CSS)</option>
+      </select>
+    </div>
+
+    <!-- TOMBOL MULAI -->
+    <button type="button" onclick="goToQuiz(event)" class="w-full py-3.5 bg-blue-600 hover:bg-blue-500 font-bold rounded-xl transition-all shadow-lg hover:shadow-blue-500/25 active:scale-[0.98] text-sm flex items-center justify-center gap-2 cursor-pointer">
+      <span>Mulai Ujian (20 Menit)</span>
+      <span>➔</span>
+    </button>
+
+  </div>
+
+  <script>
+    function goToQuiz(e) {
+      if (e) e.preventDefault();
+
+      const nameInput = document.getElementById("student-name");
+      const gradeInput = document.getElementById("student-grade");
+      const errorMsg = document.getElementById("error-msg");
+
+      const name = nameInput.value.trim();
+      const grade = gradeInput.value;
+
+      // Reset tampilan border & error sebelum validasi
+      nameInput.classList.remove("border-red-500");
+      gradeInput.classList.remove("border-red-500");
+      errorMsg.classList.add("hidden");
+
+      // Validasi Input Kosong
+      if (!name || !grade) {
+        errorMsg.classList.remove("hidden");
+        if (!name) nameInput.classList.add("border-red-500");
+        if (!grade) gradeInput.classList.add("border-red-500");
+        return; // Hentikan proses jika belum lengkap
+      }
+
+      // Menyimpan data login secara aman dan beralih ke quiz.html
+      try {
+        sessionStorage.setItem("studentName", name);
+        sessionStorage.setItem("studentGrade", grade);
+        window.location.href = "quiz.html";
+      } catch (err) {
+        // Fallback jika browser memblokir sessionStorage (contoh di Incognito / Browser In-App WA)
+        window.location.href = `quiz.html?name=${encodeURIComponent(name)}&grade=${encodeURIComponent(grade)}`;
+      }
+    }
+  </script>
+</body>
+</html>

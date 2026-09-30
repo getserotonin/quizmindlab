@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Code Challenge - Portal Informatika</title>
+  <!-- Menghubungkan CSS Hasil Kompilasi Tailwind v4 CLI -->
+  <link rel="stylesheet" href="output.css">
+</head>
+<body class="bg-slate-900 text-white min-h-screen flex flex-col font-sans selection:bg-blue-500 selection:text-white">
+
+  <!-- NAVBAR HEADER -->
+  <header class="bg-slate-800 border-b border-slate-700 px-4 py-3 flex items-center justify-between shadow-md">
+    <div class="flex items-center gap-3">
+      <h1 class="text-sm font-bold text-blue-400 flex items-center gap-2">
+        <span class="text-lg">⚡</span> Interactive Code Challenge
+      </h1>
+    </div>
+    
+    <!-- TIMER & INDIKATOR TANTANGAN -->
+    <div class="flex items-center gap-2">
+      <span id="timer-display" class="px-3 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-full text-xs font-mono font-bold flex items-center gap-1 shadow-sm transition-all">
+        ⏱️ <span id="timer-text">45:00</span>
+      </span>
+      <span id="challenge-badge" class="px-3 py-1 bg-blue-600/30 text-blue-400 border border-blue-500/30 rounded-full text-xs font-semibold">
+        Tantangan 1 / 10
+      </span>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER (SPLIT SCREEN) -->
+  <main class="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 p-4 max-w-[1600px] w-full mx-auto">
+    
+    <!-- PANEL KIRI: INSTRUKSI & EDITOR -->
+    <div class="flex flex-col bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-xl">
+      
+      <!-- HEADER INSTRUKSI -->
+      <div class="p-4 border-b border-slate-700 bg-slate-800/80">
+        <div class="flex justify-between items-start mb-2">
+          <h2 id="title" class="text-base font-bold text-yellow-400">Loading...</h2>
+          <span id="category" class="px-2 py-0.5 bg-slate-700 text-slate-300 rounded text-[10px] font-mono">HTML</span>
+        </div>
+        <p id="instruction" class="text-xs text-slate-300 leading-relaxed mb-3"></p>
+        
+        <!-- CHECKLIST SYARAT -->
+        <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-700/60">
+          <h3 class="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Syarat Kelulusan Kode:</h3>
+          <ul id="requirements" class="space-y-1.5 text-xs"></ul>
+        </div>
+      </div>
+
+      <!-- EDITOR BOX -->
+      <div class="flex-1 flex flex-col p-4 bg-slate-950 min-h-[300px]">
+        <div class="flex justify-between items-center mb-2">
+          <span class="text-[11px] font-mono text-slate-400">index.html (Ketik Kode di Bawah)</span>
+          <button onclick="resetCode()" class="text-[11px] text-slate-400 hover:text-white transition-colors cursor-pointer">
+            🔄 Reset Kode
+          </button>
+        </div>
+        
+        <textarea id="code-editor" class="w-full flex-1 p-3 bg-slate-900 text-green-400 font-mono text-xs rounded-xl border border-slate-800 focus:outline-none focus:border-blue-500 transition-colors resize-none leading-relaxed shadow-inner" spellcheck="false"></textarea>
+      </div>
+
+      <!-- FOOTER BUTTONS -->
+      <div class="p-3 border-t border-slate-700 bg-slate-800 flex justify-between items-center gap-2">
+        <button onclick="prevChallenge()" id="prev-btn" class="px-3 py-2 bg-slate-700 hover:bg-slate-600 font-semibold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed">
+          ◀️ Sebelumnya
+        </button>
+        <div class="flex gap-2">
+          <button onclick="runCode()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs rounded-xl transition-all cursor-pointer">
+            ▶️ Jalankan Kode
+          </button>
+          <button onclick="checkCode()" class="px-5 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs rounded-xl transition-all shadow-md active:scale-[0.98] cursor-pointer">
+            ✅ Coba / Periksa Jawaban
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- PANEL KANAN: LIVE OUTPUT PREVIEW -->
+    <div class="flex flex-col bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden shadow-xl">
+      
+      <!-- PREVIEW HEADER -->
+      <div class="p-3 border-b border-slate-700 bg-slate-800 flex justify-between items-center">
+        <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span> Live Preview Browser
+        </span>
+        <span id="status-badge" class="px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-slate-700 text-slate-400">
+          Belum Diperiksa
+        </span>
+      </div>
+
+      <!-- IFRAME OUTPUT -->
+      <div class="flex-1 bg-white relative min-h-[350px]">
+        <iframe id="preview-frame" class="w-full h-full border-none"></iframe>
+      </div>
+
+      <!-- FEEDBACK PANEL -->
+      <div id="feedback-panel" class="p-4 bg-slate-900 border-t border-slate-700 min-h-[90px] flex items-center justify-between">
+        <div id="feedback-text" class="text-xs text-slate-400">
+          Ketik kode di sebelah kiri lalu klik <span class="text-blue-400 font-semibold">"Coba / Periksa Jawaban"</span> untuk menguji hasil kodinganmu.
+        </div>
+        <button id="next-btn" onclick="nextChallenge()" class="hidden px-4 py-2 bg-green-600 hover:bg-green-500 font-bold text-xs rounded-xl transition-all shadow-md active:scale-[0.98] text-white cursor-pointer whitespace-nowrap ml-3">
+          Tantangan Berikutnya ➔
+        </button>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- MODAL RINGKASAN & STATUS SUBMIT KE GOOGLE SHEETS -->
+  <div id="end-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl max-w-md w-full text-center shadow-2xl">
+      <div id="modal-icon" class="text-5xl mb-3">⏰</div>
+      <h2 id="modal-title" class="text-xl font-extrabold text-white mb-1">Waktu Pengerjaan Habis!</h2>
+      <p id="modal-subtitle" class="text-xs text-slate-300 mb-4">Sesi latihan Code Challenge telah berakhir.</p>
+
+      <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 mb-4 shadow-inner text-left space-y-3">
+        <div class="flex justify-between items-center text-xs border-b border-slate-700 pb-2">
+          <span class="text-slate-400">Siswa:</span>
+          <span id="modal-student-name" class="text-blue-400 font-bold text-right">-</span>
+        </div>
+        <div class="flex justify-between items-center text-xs">
+          <span class="text-slate-400">Skor Kuis Pilihan Ganda:</span>
+          <span id="modal-quiz-score" class="text-sm font-bold text-white">0/0</span>
+        </div>
+        <div class="flex justify-between items-center text-xs">
+          <span class="text-slate-400">Tantangan Koding Selesai:</span>
+          <span id="modal-challenge-score" class="text-lg font-black text-yellow-400 my-0.5">0/10</span>
+        </div>
+      </div>
+
+      <p id="modal-saving-status" class="text-xs text-yellow-400 animate-pulse mb-4 font-medium">Mengirim seluruh data hasil ke Google Sheets...</p>
+
+      <button onclick="backToHome()" class="w-full py-3 bg-blue-600 hover:bg-blue-500 font-bold rounded-xl text-sm transition-all shadow-lg active:scale-[0.98] text-white cursor-pointer">
+        Selesai & Kembali ke Beranda 🏠
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // URL API GOOGLE SHEETS
+    const API_URL = "https://script.google.com/macros/s/AKfycbw0o_nF5Ev_USh0xs_LmK09pEHR8x6o1-MsAcyeynwwO4ZmC2GoiOEF_vP-4h3jYNfm/exec";
+
+    // 1. MENGAMBIL DATA SISWA & NILAI KUIS DARI HALAMAN SEBELUMNYA
+    const urlParams = new URLSearchParams(window.location.search);
+    let studentName = sessionStorage.getItem("studentName") || urlParams.get("name") || "Peserta Ujian";
+    let studentGrade = sessionStorage.getItem("studentGrade") || urlParams.get("grade") || "SMP";
+    
+    // Ambil rekap nilai kuis sebelumnya
+    let quizCorrect = parseInt(sessionStorage.getItem("quizCorrect") || urlParams.get("qc") || 0);
+    let quizTotal = parseInt(sessionStorage.getItem("quizTotal") || urlParams.get("qt") || 0);
+
+    // PENGATURAN LIMIT WAKTU (45 MENIT = 2700 DETIK)
+    let timeRemaining = 45 * 60; <!-- Ubah ke 45 *60 detik untuk 45 menit --> 
+    let timerInterval = null;
+    let completedChallenges = new Set();
+    let isSubmitted = false;
+
+    // 10 SOAL CODE CHALLENGE
+    const challenges = [
+      {
+        id: 1, title: "1. HTML Basic - Judul & Paragraf", category: "HTML Basic",
+        instruction: "Buatlah judul utama <h1> dengan teks 'Selamat Datang' dan sebuah paragraf <p> dengan teks 'Ini web pertama saya'.",
+        starterCode: `<!DOCTYPE html>\n<html>\n<body>\n  <!-- Ketik kode di bawah ini -->\n  \n</body>\n</html>`,
+        requirements: [
+          { text: "Memiliki elemen <h1> berisi teks 'Selamat Datang'", check: (doc) => doc.querySelector('h1')?.innerText.trim() === 'Selamat Datang' },
+          { text: "Memiliki elemen <p> berisi teks 'Ini web pertama saya'", check: (doc) => doc.querySelector('p')?.innerText.trim() === 'Ini web pertama saya' }
+        ]
+      },
+      {
+        id: 2, title: "2. HTML Elements - Nested Elements", category: "HTML Elements",
+        instruction: "Buatlah elemen paragraf <p> yang di dalamnya memuat teks tebal <b> dengan kata 'Penting'.",
+        starterCode: `<!DOCTYPE html>\n<html>\n<body>\n  <!-- Buat paragraf bersarang di sini -->\n  \n</body>\n</html>`,
+        requirements: [
+          { text: "Memiliki tag <p>", check: (doc) => !!doc.querySelector('p') },
+          { text: "Di dalam <p> terdapat tag <b> dengan teks 'Penting'", check: (doc) => doc.querySelector('p b')?.innerText.trim() === 'Penting' }
+        ]
+      },
+      {
+        id: 3, title: "3. HTML Attributes - Link & Target", category: "HTML Attributes",
+        instruction: "Buatlah tautan <a> dengan href mengarah ke 'https://google.com', target='_blank', dan teks 'Buka Google'.",
+        starterCode: `<!DOCTYPE html>\n<html>\n<body>\n  <!-- Buat tag <a> di sini -->\n  \n</body>\n</html>`,
+        requirements: [
+          { text: "Tautan <a> memiliki href='https://google.com'", check: (doc) => doc.querySelector('a')?.getAttribute('href') === 'https://google.com' },
+          { text: "Tautan memiliki target='_blank' dan teks 'Buka Google'", check: (doc) => doc.querySelector('a')?.getAttribute('target') === '_blank' && doc.querySelector('a')?.innerText.trim() === 'Buka Google' }
+        ]
+      },
+      {
+        id: 4, title: "4. HTML Headings - Hirarki Judul", category: "HTML Headings",
+        instruction: "Buat tiga tingkatan judul: <h1> dengan teks 'Judul Utama', <h2> dengan teks 'Sub Judul', dan <h3> dengan teks 'Sub Bab'.",
+        starterCode: `<!DOCTYPE html>\n<html>\n<body>\n  <!-- Buat h1, h2, dan h3 di sini -->\n  \n</body>\n</html>`,
+        requirements: [
+          { text: "Memiliki <h1> berisi 'Judul Utama'", check: (doc) => doc.querySelector('h1')?.innerText.trim() === 'Judul Utama' },
+          { text: "Memiliki <h2> berisi 'Sub Judul'", check: (doc) => doc.querySelector('h2')?.innerText.trim() === 'Sub Judul' },
+          { text: "Memiliki <h3> berisi 'Sub Bab'", check: (doc) => doc.querySelector('h3')?.innerText.trim() === 'Sub Bab' }
+        ]
+      },
+      {
+        id: 5, title: "5. HTML Paragraphs - Line Break", category: "HTML Paragraphs",
+        instruction: "Buatlah satu paragraf <p> berisi teks 'Baris Pertama' dan 'Baris Kedua' yang dipisahkan oleh tag <br>.",
+        starterCode: `<!DOCTYPE html>\n<html>\n<body>\n  <!-- Buat paragraf dengan <br> di sini -->\n  \n</body>\n</html>`,
+        requirements: [
+          { text: "Elemen <p> mengandung tag <br>", check: (doc) => !!doc.querySelector('p br') },
+          { text: "Teks paragraf memuat 'Baris Pertama' dan 'Baris Kedua'", check: (doc) => { const txt = doc.querySelector('p')?.innerText || ''; return txt.includes('Baris Pertama') && txt.includes('Baris Kedua'); } }
+        ]
+      },
+      {
+        id: 6, title: "6. HTML Styles - Inline CSS", category: "HTML Styles",
+        instruction: "Buatlah judul <h1> dengan inline style color: red dan background-color: yellow.",
+        starterCode: `<!DOCTYPE html>\n<html>\n<body>\n  <!-- Buat h1 dengan style di sini -->\n  \n</body>\n</html>`,
+        requirements: [
+          { text: "Warna teks <h1> diset ke merah (color: red)", check: (doc) => { const el = doc.querySelector('h1'); return el && (el.style.color === 'red' || el.style.color === 'rgb(255, 0, 0)'); } },
+          { text: "Warna latar <h1> diset ke kuning (background-color: yellow)", check: (doc) => { const el = doc.querySelector('h1'); return el && (el.style.backgroundColor === 'yellow' || el.style.backgroundColor === 'rgb(255, 255, 0)'); } }
+        ]
+      },
+      {
+        id: 7, title: "7. HTML Formatting - Penekanan Teks", category: "HTML Formatting",
+        instruction: "Buat paragraf <p> berisi kata 'Penting' yang dibungkus tag <strong> dan kata 'Catatan' yang dibungkus tag <em>.",
+        starterCode: `<!DOCTYPE html>\n<html>\n<body>\n  <!-- Buat paragraf dengan <strong> dan <em> -->\n  \n</body>\n</html>`,
+        requirements: [
+          { text: "Memiliki tag <strong> dengan teks 'Penting'", check: (doc) => doc.querySelector('strong')?.innerText.trim() === 'Penting' },
+          { text: "Memiliki tag <em> dengan teks 'Catatan'", check: (doc) => doc.querySelector('em')?.innerText.trim() === 'Catatan' }
+        ]
+      },
+      {
+        id: 8, title: "8. HTML Quotations - Blockquote", category: "HTML Quotations",
+        instruction: "Buatlah tag <blockquote> berisi kalimat 'Pendidikan adalah senjata paling mematikan.'",
+        starterCode: `<!DOCTYPE html>\n<html>\n<body>\n  <!-- Buat blockquote di sini -->\n  \n</body>\n</html>`,
+        requirements: [
+          { text: "Memiliki tag <blockquote> berisi kutipan yang sesuai", check: (doc) => doc.querySelector('blockquote')?.innerText.includes('Pendidikan adalah senjata paling mematikan') }
+        ]
+      },
+      {
+        id: 9, title: "9. HTML Comments - Komentar Kode", category: "HTML Comments",
+        instruction: "Tambahkan komentar HTML <!-- Ini Komentar Saya --> di dalam <body>, lalu buat <h2> dengan teks 'Tampil'.",
+        starterCode: `<!DOCTYPE html>\n<html>\n<body>\n  \n</body>\n</html>`,
+        requirements: [
+          { text: "Memiliki elemen <h2> berisi 'Tampil'", check: (doc) => doc.querySelector('h2')?.innerText.trim() === 'Tampil' },
+          { text: "Kode memuat komentar <!-- Ini Komentar Saya -->", check: () => document.getElementById("code-editor").value.includes('<!-- Ini Komentar Saya -->') || document.getElementById("code-editor").value.includes('<!--Ini Komentar Saya-->') }
+        ]
+      },
+      {
+        id: 10, title: "10. HTML Colors - Kode HEX / RGB", category: "HTML Colors",
+        instruction: "Buatlah paragraf <p> dengan inline style warna teks `#2563eb` atau `rgb(37, 99, 235)` dan teks 'Warna Biru'.",
+        starterCode: `<!DOCTYPE html>\n<html>\n<body>\n  <!-- Buat paragraf warna biru di sini -->\n  \n</body>\n</html>`,
+        requirements: [
+          { text: "Memiliki elemen <p> berisi teks 'Warna Biru'", check: (doc) => doc.querySelector('p')?.innerText.trim() === 'Warna Biru' },
+          { text: "Warna teks <p> diatur ke #2563eb / rgb(37, 99, 235)", check: (doc) => { const p = doc.querySelector('p'); if(!p) return false; const col = p.style.color.replace(/\s+/g, '').toLowerCase(); return col === '#2563eb' || col === 'rgb(37,99,235)'; } }
+        ]
+      }
+    ];
+
+    let currentIdx = 0;
+
+    // EFEK SUARA
+    function playSFX(type) {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+
+        if (type === 'pass') {
+          osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+          osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
+          osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2);
+          gain.gain.setValueAtTime(0.1, ctx.currentTime);
+          osc.start(); osc.stop(ctx.currentTime + 0.35);
+        } else if (type === 'fail') {
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(180, ctx.currentTime);
+          gain.gain.setValueAtTime(0.1, ctx.currentTime);
+          osc.start(); osc.stop(ctx.currentTime + 0.2);
+        }
+      } catch (e) {}
+    }
+
+    window.onload = function() {
+      loadChallenge();
+      startTimer();
+    };
+
+    // FUNGSI TIMER COUNTDOWN
+    function startTimer() {
+      updateTimerDisplay();
+      timerInterval = setInterval(() => {
+        timeRemaining--;
+        updateTimerDisplay();
+
+        if (timeRemaining <= 0) {
+          clearInterval(timerInterval);
+          finishChallenge("WAKTU HABIS");
+        }
+      }, 1000);
+    }
+
+    function updateTimerDisplay() {
+      const minutes = Math.floor(timeRemaining / 60);
+      const seconds = timeRemaining % 60;
+      document.getElementById("timer-text").innerText = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+      if (timeRemaining <= 300) {
+        document.getElementById("timer-display").className = "px-3 py-1 bg-red-500/20 text-red-400 border border-red-500/40 rounded-full text-xs font-mono font-bold flex items-center gap-1 animate-pulse";
+      }
+    }
+
+    function loadChallenge() {
+      const c = challenges[currentIdx];
+      document.getElementById("challenge-badge").innerText = `Tantangan ${currentIdx + 1} / ${challenges.length}`;
+      document.getElementById("title").innerText = c.title;
+      document.getElementById("category").innerText = c.category;
+      document.getElementById("instruction").innerText = c.instruction;
+      document.getElementById("code-editor").value = c.starterCode;
+
+      const reqList = document.getElementById("requirements");
+      reqList.innerHTML = "";
+      c.requirements.forEach((req, idx) => {
+        const li = document.createElement("li");
+        li.id = `req-${idx}`;
+        li.className = "flex items-center gap-2 text-slate-400";
+        li.innerHTML = `<span id="icon-${idx}">⚪</span> <span>${req.text}</span>`;
+        reqList.appendChild(li);
+      });
+
+      document.getElementById("status-badge").innerText = "Belum Diperiksa";
+      document.getElementById("status-badge").className = "px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-slate-700 text-slate-400";
+      document.getElementById("feedback-text").innerHTML = "Ketik kode di sebelah kiri lalu klik <span class='text-blue-400 font-semibold'>\"Coba / Periksa Jawaban\"</span> untuk menguji hasil kodinganmu.";
+      document.getElementById("next-btn").classList.add("hidden");
+      document.getElementById("prev-btn").disabled = (currentIdx === 0);
+
+      runCode();
+    }
+
+    function runCode() {
+      const code = document.getElementById("code-editor").value;
+      const iframe = document.getElementById("preview-frame");
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+      iframeDoc.open();
+      iframeDoc.write(code);
+      iframeDoc.close();
+      return iframeDoc;
+    }
+
+    function checkCode() {
+      if (isSubmitted) return;
+      const doc = runCode();
+      const c = challenges[currentIdx];
+      let allPassed = true;
+
+      c.requirements.forEach((req, idx) => {
+        const passed = req.check(doc);
+        const reqItem = document.getElementById(`req-${idx}`);
+        const iconItem = document.getElementById(`icon-${idx}`);
+
+        if (passed) {
+          reqItem.className = "flex items-center gap-2 text-green-400 font-medium";
+          iconItem.innerText = "✅";
+        } else {
+          reqItem.className = "flex items-center gap-2 text-red-400 font-medium";
+          iconItem.innerText = "❌";
+          allPassed = false;
+        }
+      });
+
+      const statusBadge = document.getElementById("status-badge");
+      const feedbackText = document.getElementById("feedback-text");
+      const nextBtn = document.getElementById("next-btn");
+
+      if (allPassed) {
+        playSFX('pass');
+        completedChallenges.add(currentIdx);
+
+        statusBadge.innerText = "BERHASIL!";
+        statusBadge.className = "px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-green-600 text-white animate-bounce";
+        feedbackText.innerHTML = "🎉 <b class='text-green-400'>Hebat! Kodingan kamu 100% Benar!</b> Silakan lanjut ke tantangan berikutnya.";
+        
+        if (completedChallenges.size === challenges.length) {
+          setTimeout(() => finishChallenge("SELESAI"), 1000);
+        } else if (currentIdx < challenges.length - 1) {
+          nextBtn.classList.remove("hidden");
+        }
+      } else {
+        playSFX('fail');
+        statusBadge.innerText = "BELUM SESUAI";
+        statusBadge.className = "px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-red-600 text-white";
+        feedbackText.innerHTML = "❌ <b class='text-red-400'>Kode belum memenuhi semua syarat.</b> Periksa kembali petunjuk dan checklist di atas.";
+        nextBtn.classList.add("hidden");
+      }
+    }
+
+   // 2. FUNGSI SELESAI & SIMPAN REKAP TOTAL KE GOOGLE SHEETS
+    async function finishChallenge(reason) {
+      if (isSubmitted) return;
+      isSubmitted = true;
+      clearInterval(timerInterval);
+
+      document.getElementById("code-editor").disabled = true;
+
+      const modal = document.getElementById("end-modal");
+      const modalTitle = document.getElementById("modal-title");
+      const modalSubtitle = document.getElementById("modal-subtitle");
+      const modalIcon = document.getElementById("modal-icon");
+      
+      const modalScore = document.getElementById("modal-challenge-score");
+      const modalQuizScore = document.getElementById("modal-quiz-score");
+      const modalStudent = document.getElementById("modal-student-name");
+      const modalStatus = document.getElementById("modal-saving-status");
+
+      const challengeCorrect = completedChallenges.size;
+      const challengeTotal = challenges.length;
+      
+      const combinedTotalCorrect = quizCorrect + challengeCorrect;
+      const combinedScoreString = `Kuis: ${quizCorrect}/${quizTotal} | Code: ${challengeCorrect}/${challengeTotal}`;
+
+      modalQuizScore.innerText = `${quizCorrect}/${quizTotal}`;
+      modalScore.innerText = `${challengeCorrect}/${challengeTotal}`;
+      modalStudent.innerText = `${studentName} (${studentGrade})`;
+
+      let finalStatusText = "";
+      let isiKolomJawabanBenar = combinedTotalCorrect; // Default angka total jawaban
+
+      // ==========================================
+      // LOGIKA EVALUASI 50% & PEMBERIAN PROJECT DI POPUP
+      // ==========================================
+      const quizPercentage = quizTotal > 0 ? (quizCorrect / quizTotal) : 0;
+      const challengePercentage = challengeTotal > 0 ? (challengeCorrect / challengeTotal) : 0;
+
+      if (quizPercentage <= 0.5 && challengePercentage <= 0.5) {
+        playSFX('fail');
+        modalIcon.innerText = "⚠️";
+        modalTitle.innerText = "Skor Belum Memenuhi Standar";
+        finalStatusText = "DAPAT PROJECT";
+
+        let projectInstruction = "";
+        if (studentGrade === "SD 6") {
+          projectInstruction = "Buat animasi Scratch Kucing berjalan 10 langkah & menyapa.";
+        } else if (studentGrade === "SMP 1") {
+          projectInstruction = "Buat tabel nilai 5 siswa, gunakan rumus =SUM() & =AVERAGE().";
+        } else if (studentGrade === "SMP 2") {
+          projectInstruction = "Buat game klik di Scratch, skor bertambah saat sprite diklik.";
+        } else {
+          projectInstruction = "Buat web HTML (h1, p, img, a) & warna background dengan CSS.";
+        }
+
+        // 1. Simpan ke Spreadsheet
+        isiKolomJawabanBenar = `PROJECT: ${projectInstruction}`;
+
+        // 2. Tampilkan langsung di layar Popup Modal Siswa
+        modalSubtitle.innerHTML = `
+          Kamu harus mengerjakan tugas Project Tambahan dari Guru:<br><br>
+          <div class="p-3 bg-slate-950 border border-amber-500/50 rounded-lg text-amber-400 font-mono text-xs text-left leading-relaxed shadow-inner mt-2">
+            📌 <b>TUGAS PROJECT:</b><br>${projectInstruction}
+          </div>
+        `;
+      } 
+      else if (reason === "SELESAI") {
+        playSFX('pass');
+        modalIcon.innerText = "🏆";
+        modalTitle.innerText = "Selamat! Semua Selesai!";
+        modalSubtitle.innerHTML = "Kamu berhasil menyelesaikan seluruh rintangan ujian dengan sangat baik.";
+        finalStatusText = "SELESAI SEMUA";
+      } else {
+        playSFX('fail');
+        modalIcon.innerText = "⏰";
+        modalTitle.innerText = "Waktu Pengerjaan Habis!";
+        modalSubtitle.innerHTML = "Sesi latihan Code Challenge telah berakhir.";
+        finalStatusText = "WAKTU HABIS (CODE)";
+      }
+
+      modal.classList.remove("hidden");
+
+      // KIRIM KE GOOGLE SHEETS
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          body: JSON.stringify({
+            nama: studentName,
+            jenjang: studentGrade,
+            skor: combinedScoreString,   
+            benar: isiKolomJawabanBenar, 
+            status: finalStatusText      
+          })
+        });
+        modalStatus.innerText = "✅ Seluruh hasil akhir berhasil disimpan ke Google Sheets!";
+        modalStatus.className = "text-xs text-green-400 mb-4 font-semibold";
+      } catch (err) {
+        modalStatus.innerText = "⚠️ Gagal menyimpan nilai akhir ke Google Sheets.";
+        modalStatus.className = "text-xs text-red-400 mb-4 font-semibold";
+      }
+    }
+
+    function resetCode() {
+      if (isSubmitted) return;
+      document.getElementById("code-editor").value = challenges[currentIdx].starterCode;
+      runCode();
+    }
+
+    function nextChallenge() {
+      if (isSubmitted) return;
+      if (currentIdx < challenges.length - 1) {
+        currentIdx++;
+        loadChallenge();
+      }
+    }
+
+    function prevChallenge() {
+      if (isSubmitted) return;
+      if (currentIdx > 0) {
+        currentIdx--;
+        loadChallenge();
+      }
+    }
+
+    function backToHome() {
+      sessionStorage.clear();
+      window.location.href = "index.html";
+    }
+  </script>
+</body>
+</html>
