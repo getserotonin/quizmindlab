@@ -325,8 +325,8 @@
       loadQuestion();
     }
 
-    // FUNGSI AKHIR KUIS (TIDAK MENGIRIM DATA)
-    function endGame(reason) {
+    // FUNGSI AKHIR KUIS (BERCABANG BERDASARKAN JENJANG KELAS)
+    async function endGame(reason) { // <-- Tambahkan kata 'async' di sini
       if (isSubmitted) return;
       isSubmitted = true;
       clearInterval(timerInterval);
@@ -335,6 +335,7 @@
       document.getElementById("end-screen").classList.remove("hidden");
       
       const finalScoreString = `${correctCount}/${filteredQuestions.length}`;
+      const percentage = filteredQuestions.length > 0 ? (correctCount / filteredQuestions.length) : 0;
 
       document.getElementById("result-name").innerText = studentName;
       document.getElementById("result-grade").innerText = studentGrade;
@@ -342,36 +343,105 @@
       document.getElementById("correct-count").innerText = `${correctCount} dari ${filteredQuestions.length} Soal`;
 
       const statusCard = document.getElementById("status-card");
-
-      if (correctCount === filteredQuestions.length) {
-        playSFX('win');
-        statusCard.className = "p-4 rounded-xl border mb-4 text-center bg-green-950/60 border-green-500/80 text-green-400";
-        statusCard.innerHTML = `
-          <div class="text-2xl mb-1">🎉</div>
-          <h3 class="text-sm font-bold">SELAMAT! KAMU LULUS UJIAN KUIS</h3>
-          <p class="text-xs mt-1 text-slate-300">Nilaimu sempurna! Sekarang bersiaplah untuk sesi Code Challenge.</p>
-        `;
-      } else {
-        if (reason === "WAKTU_HABIS") playSFX('fail'); else playSFX('win');
-        statusCard.className = "p-4 rounded-xl border mb-4 text-left bg-blue-950/60 border-blue-500/80 text-blue-300";
-        statusCard.innerHTML = `
-          <div class="flex items-center gap-2 mb-1">
-            <span class="text-base">📋</span>
-            <h3 class="text-xs font-bold">Sesi Ujian Kuis Selesai</h3>
-          </div>
-          <p class="text-xs text-slate-300">Skor kuis pilihan ganda telah dicatat. Klik tombol di bawah untuk memulai sesi pengerjaan <b>Code Challenge (45 Menit)</b>.</p>
-        `;
-      }
-
-      // SIMPAN NILAI KUIS SEMENTARA KE BROWSER
-      try {
-        sessionStorage.setItem("quizCorrect", correctCount);
-        sessionStorage.setItem("quizTotal", filteredQuestions.length);
-      } catch(e) {}
-      
-      // FALLBACK AMAN LEWAT URL PARAMETER (JIKA SESSION STORAGE DIBLOKIR)
+      const savingStatus = document.getElementById("saving-status");
       const challengeBtn = document.getElementById("btn-lanjut-challenge");
-      challengeBtn.href = `challenge.html?name=${encodeURIComponent(studentName)}&grade=${encodeURIComponent(studentGrade)}&qc=${correctCount}&qt=${filteredQuestions.length}`;
+
+      // CEK APAKAH INI KELAS 9 (DENGAN NAMA "SMP 3" ATAU "KELAS 9")
+      const isKelas9 = studentGrade.toUpperCase() === "SMP 3" || studentGrade.toUpperCase() === "KELAS 9";
+
+      if (isKelas9) {
+        // ==========================================
+        // ALUR UNTUK KELAS 9 (LANJUT CODE CHALLENGE)
+        // ==========================================
+        challengeBtn.classList.remove("hidden");
+        savingStatus.innerText = "⚠️ Nilai akan dikirim ke sistem secara otomatis setelah kamu menyelesaikan Code Challenge.";
+        savingStatus.className = "text-xs text-amber-400 animate-pulse mb-4 font-semibold";
+        
+        if (correctCount === filteredQuestions.length) {
+          playSFX('win');
+          statusCard.className = "p-4 rounded-xl border mb-4 text-center bg-green-950/60 border-green-500/80 text-green-400";
+          statusCard.innerHTML = `<div class="text-2xl mb-1">🎉</div><h3 class="text-sm font-bold">SELAMAT! KAMU LULUS UJIAN KUIS</h3><p class="text-xs mt-1 text-slate-300">Sekarang bersiaplah untuk sesi Code Challenge.</p>`;
+        } else {
+          if (reason === "WAKTU_HABIS") playSFX('fail'); else playSFX('win');
+          statusCard.className = "p-4 rounded-xl border mb-4 text-left bg-blue-950/60 border-blue-500/80 text-blue-300";
+          statusCard.innerHTML = `<div class="flex items-center gap-2 mb-1"><span class="text-base">📋</span><h3 class="text-xs font-bold">Sesi Ujian Kuis Selesai</h3></div><p class="text-xs text-slate-300">Klik tombol di bawah untuk memulai sesi Code Challenge.</p>`;
+        }
+
+        try {
+          sessionStorage.setItem("quizCorrect", correctCount);
+          sessionStorage.setItem("quizTotal", filteredQuestions.length);
+        } catch(e) {}
+        
+        // Arahkan link ke challenge
+        challengeBtn.href = `challenge.html?name=${encodeURIComponent(studentName)}&grade=${encodeURIComponent(studentGrade)}&qc=${correctCount}&qt=${filteredQuestions.length}`;
+
+      } else {
+        // ==========================================
+        // ALUR UNTUK SELAIN KELAS 9 (LANGSUNG SELESAI & KIRIM)
+        // ==========================================
+        challengeBtn.classList.add("hidden"); // Sembunyikan tombol Code Challenge
+        savingStatus.innerText = "Mengirim nilai kuis ke sistem...";
+        savingStatus.className = "text-xs text-yellow-400 animate-pulse mb-4 font-semibold";
+
+        let finalStatusText = "SELESAI KUIS";
+        let isiKolomJawabanBenar = correctCount;
+
+        // Logika Evaluasi Project (Jika Skor <= 50%)
+        if (percentage <= 0.5) {
+          finalStatusText = "DAPAT PROJECT";
+          playSFX('fail');
+          
+          if (studentGrade.toUpperCase() === "SD 6") {
+            isiKolomJawabanBenar = "PROJECT: Buat animasi Scratch Kucing berjalan 10 langkah & menyapa.";
+          } else if (studentGrade.toUpperCase() === "SMP 1") {
+            isiKolomJawabanBenar = "PROJECT: Buat tabel nilai 5 siswa, gunakan rumus =SUM() & =AVERAGE().";
+          } else if (studentGrade.toUpperCase() === "SMP 2") {
+            isiKolomJawabanBenar = "PROJECT: Buat game klik di Scratch, skor bertambah saat sprite diklik.";
+          } else {
+            isiKolomJawabanBenar = "PROJECT: Pelajari ulang materi Kuis.";
+          }
+
+          // Munculkan instruksi project di layar
+          statusCard.className = "p-4 rounded-xl border mb-4 text-left bg-red-950/60 border-red-500/80 text-red-300";
+          statusCard.innerHTML = `
+            <div class="flex items-center gap-2 mb-1">
+              <span class="text-base">⚠️</span>
+              <h3 class="text-xs font-bold">Skor Belum Memenuhi Standar</h3>
+            </div>
+            <p class="text-xs mt-1 font-medium text-red-200">Kamu harus mengerjakan tugas Project Tambahan:</p>
+            <div class="mt-2 p-3 bg-slate-950 border border-red-500/50 rounded-lg text-red-400 font-mono text-xs leading-relaxed shadow-inner">
+              📌 <b>TUGAS PROJECT:</b><br>${isiKolomJawabanBenar.replace('PROJECT: ', '')}
+            </div>
+          `;
+        } else {
+          playSFX('win');
+          statusCard.className = "p-4 rounded-xl border mb-4 text-center bg-green-950/60 border-green-500/80 text-green-400";
+          statusCard.innerHTML = `
+            <div class="text-2xl mb-1">🎉</div>
+            <h3 class="text-sm font-bold">SELAMAT! KAMU LULUS UJIAN KUIS</h3>
+            <p class="text-xs mt-1 text-slate-300">Seluruh sesi ujianmu telah selesai dengan baik.</p>
+          `;
+        }
+
+        // Langsung eksekusi pengiriman (fetch) ke Spreadsheet
+        try {
+          await fetch(API_URL, {
+            method: "POST",
+            body: JSON.stringify({
+              nama: studentName,
+              jenjang: studentGrade,
+              skor: finalScoreString,
+              benar: isiKolomJawabanBenar,
+              status: finalStatusText
+            })
+          });
+          savingStatus.innerText = "✅ Nilai kuis berhasil disimpan ke sistem!";
+          savingStatus.className = "text-xs text-green-400 mb-4 font-semibold";
+        } catch (err) {
+          savingStatus.innerText = "⚠️ Gagal menyimpan nilai ke sistem.";
+          savingStatus.className = "text-xs text-red-400 mb-4 font-semibold";
+        }
+      }
     }
 
     function backToLogin() {
