@@ -12,10 +12,10 @@
   <div id="quiz-card" class="bg-slate-800 p-6 rounded-2xl shadow-2xl max-w-lg w-full border border-slate-700 transition-all duration-300">
     
     <!-- ========================================== -->
-    <!-- LAYAR PERMAINAN UJIAN (20 MENIT)           -->
+    <!-- LAYAR PERMAINAN UJIAN (40 MENIT)           -->
     <!-- ========================================== -->
     <div id="game-screen">
-      <!-- Header Game (Skor, Jenjang, Timer 20 Menit) -->
+      <!-- Header Game (Skor, Jenjang, Timer 40 Menit) -->
       <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-700">
         <div>
           <span class="text-xs text-slate-400">Skor:</span>
@@ -23,9 +23,9 @@
         </div>
         <div class="flex items-center gap-2">
           <span id="display-grade" class="text-xs px-2.5 py-1 bg-slate-700 rounded-lg text-slate-300 font-medium"></span>
-          <!-- TIMER COUNTDOWN 20 MENIT -->
+          <!-- TIMER COUNTDOWN 40 MENIT -->
           <span id="timer-display" class="px-2.5 py-1 bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-lg text-xs font-mono font-bold flex items-center gap-1">
-            ⏱️ <span id="timer-text">20:00</span>
+            ⏱️ <span id="timer-text">40:00</span>
           </span>
         </div>
       </div>
@@ -101,8 +101,8 @@
     let correctCount = 0;
     let currentMappedOptions = [];
 
-    // TIMER 20 MENIT (1200 DETIK)
-    let timeRemaining = 20 * 60;
+    // TIMER 40 MENIT (2400 DETIK)
+    let timeRemaining = 40 * 60;
     let timerInterval = null;
     let isSubmitted = false;
 
